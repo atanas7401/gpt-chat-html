@@ -1,100 +1,118 @@
-
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>GPT Бот</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 0;
-        }
-        #chat-toggle {
-            position: fixed;
-            bottom: 0;
-            right: 20px;
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-        #chat-container {
-            display: none;
-            position: fixed;
-            bottom: 50px;
-            right: 20px;
-            width: 350px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        textarea {
-            width: 100%;
-            height: 80px;
-            margin-bottom: 10px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        #response {
-            margin-top: 10px;
-            background: #e9f0f7;
-            padding: 10px;
-            border-radius: 5px;
-            min-height: 40px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPT Бот</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .chat-toggle {
+      position: fixed;
+      bottom: 0;
+      right: 20px;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+    }
+    .chat-container {
+      position: fixed;
+      bottom: 0;
+      right: 20px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      width: 360px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background-color: #f9f9f9;
+      padding: 10px;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      resize: none;
+      padding: 10px;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+    .response-container {
+      padding: 10px;
+      background-color: #e9f0f9;
+      height: 200px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    .chat-footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 10px;
+      border-top: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <div class="chat-toggle" onclick="toggleChat()">Чат Бот консултант</div>
 
-<div id="chat-toggle">Чат Бот консултант</div>
+  <div class="chat-container" id="chatBox">
+    <div class="chat-header">GPT Бот</div>
+    <div class="response-container" id="response"></div>
+    <textarea id="userInput" placeholder="Напишете въпрос..."></textarea>
+    <div class="chat-footer">
+      <button onclick="sendMessage()">Изпрати</button>
+    </div>
+  </div>
 
-<div id="chat-container">
-    <h2>GPT Бот</h2>
-    <textarea id="user-input" placeholder="Задай въпрос..."></textarea>
-    <button onclick="sendMessage()">Изпрати</button>
-    <div id="response"></div>
-</div>
+  <script>
+    const chatBox = document.getElementById("chatBox");
+    const responseBox = document.getElementById("response");
+    const userInput = document.getElementById("userInput");
 
-<script>
-    document.getElementById('chat-toggle').onclick = function () {
-        var chat = document.getElementById('chat-container');
-        chat.style.display = chat.style.display === 'none' ? 'block' : 'none';
-    };
+    function toggleChat() {
+      chatBox.style.display = chatBox.style.display === "none" ? "flex" : "none";
+    }
 
     async function sendMessage() {
-        const message = document.getElementById('user-input').value;
-        const responseEl = document.getElementById('response');
+      const message = userInput.value.trim();
+      if (!message) return;
+      responseBox.innerHTML += `<div><strong>Вие:</strong> ${message}</div>`;
+      userInput.value = "";
 
-        try {
-            const response = await fetch('https://gpt-bot-0cs6.onrender.com/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message })
-            });
-
-            const data = await response.json();
-            responseEl.innerText = data.reply || 'Няма отговор.';
-        } catch (error) {
-            console.error(error);
-            responseEl.innerText = 'Възникна грешка при комуникацията с GPT.';
-        }
+      try {
+        const res = await fetch("https://gpt-bot-0cs6.onrender.com/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        responseBox.innerHTML += `<div><strong>Бот:</strong> ${data.reply}</div>`;
+        responseBox.scrollTop = responseBox.scrollHeight;
+      } catch (err) {
+        responseBox.innerHTML += `<div style='color:red;'>Грешка при връзката със сървъра.</div>`;
+      }
     }
-</script>
-
+  </script>
 </body>
 </html>
